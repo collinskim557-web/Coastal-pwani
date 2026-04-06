@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Creative Assets</title>
+
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+    font-family: Arial;
+    background: linear-gradient(135deg,#667eea,#764ba2);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+.container {
+    background: rgba(255,255,255,0.95);
+    padding:3rem;
+    border-radius:20px;
+    text-align:center;
+    max-width:500px;
+}
+
+.upload-area {
+    border:3px dashed #667eea;
+    padding:2rem;
+    cursor:pointer;
+    margin:2rem 0;
+}
+
+.preview img, video {
+    max-width:100%;
+    margin-top:10px;
+    border-radius:10px;
+}
+
+.loading { display:none; }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>🎨 Creative Assets</h1>
+
+    <div class="upload-area" id="uploadArea">
+        Click or Drop Image / Video
+        <input type="file" id="fileInput" hidden accept="image/*,video/*">
+    </div>
+
+    <div class="loading" id="loading">Uploading...</div>
+    <div class="preview" id="preview"></div>
+</div>
+
+<!-- ✅ FIREBASE (REAL UPLOAD) -->
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } 
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+// ✅ YOUR CONFIG (FIXED)
+const firebaseConfig = {
+  apiKey: "AIzaSyBKcnd952c81LyG0ofN_un-BCMdb0FzQ4w",
+  authDomain: "coastal-marketing-38cae.firebaseapp.com",
+  databaseURL: "https://coastal-marketing-38cae-default-rtdb.firebaseio.com",
+  projectId: "coastal-marketing-38cae",
+  storageBucket: "coastal-marketing-38cae.appspot.com", // ✅ FIXED HERE
+  messagingSenderId: "539485085349",
+  appId: "1:539485085349:web:5452b5ef6f31a7357b374c"
+};
+
+// Init
+const app = initializeApp(firebaseConfig);
+const storage = getStorage(app);
+
+// Elements
+const uploadArea = document.getElementById('uploadArea');
+const fileInput = document.getElementById('fileInput');
+const loading = document.getElementById('loading');
+const preview = document.getElementById('preview');
+
+// Click upload
+uploadArea.onclick = () => fileInput.click();
+
+// Drag drop
+uploadArea.addEventListener('dragover', e => {
+    e.preventDefault();
+});
+
+uploadArea.addEventListener('drop', e => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) uploadFile(file);
+});
+
+fileInput.onchange = e => {
+    const file = e.target.files[0];
+    if (file) uploadFile(file);
+};
+
+// 🚀 REAL UPLOAD
+async function uploadFile(file) {
+
+    if (file.size > 10 * 1024 * 1024) {
+        alert("Max 10MB file");
+        return;
+    }
+
+    loading.style.display = "block";
+
+    try {
+        const storageRef = ref(storage, "uploads/" + Date.now() + "_" + file.name);
+
+        await uploadBytes(storageRef, file);
+
+        const url = await getDownloadURL(storageRef);
+
+        loading.style.display = "none";
+
+        console.log("✅ URL:", url);
+
+        // Preview
+        if (file.type.startsWith("image")) {
+            preview.innerHTML = `<img src="${url}">`;
+        } else {
+            preview.innerHTML = `<video src="${url}" controls></video>`;
+        }
+
+        alert("Upload successful!");
+
+    } catch (err) {
+        console.error(err);
+        loading.style.display = "none";
+        alert("Upload failed → Enable storage / upgrade project");
+    }
+}
+
+</script>
+
+</body>
+          </html>
