@@ -41,3 +41,31 @@
     <script src="script.js"></script>
 </body>
     </html>
+// Sample data representing your inventory
+const items = [
+    { name: "Premium Streetwear Jacket", price: "KSh 2,500", category: "Apparel", image: "https://via.placeholder.com/300x200" },
+    { name: "Urban Sedan Rental", price: "KSh 5,000/day", category: "Vehicles", image: "https://via.placeholder.com/300x200" },
+    { name: "Modern Studio Apartment", price: "KSh 25,000/mo", category: "Real Estate", image: "https://via.placeholder.com/300x200" },
+    { name: "Canvas High-Tops", price: "KSh 3,200", category: "Footwear", image: "https://via.placeholder.com/300x200" }
+];
+
+const grid = document.getElementById('product-grid');
+
+function renderItems() {
+    grid.innerHTML = items.map(item => `
+        <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow">
+            <img src="${item.image}" alt="${item.name}" class="w-full h-48 object-cover">
+            <div class="p-4">
+                <span class="text-xs font-semibold text-blue-500 uppercase">${item.category}</span>
+                <h4 class="text-lg font-bold mt-1">${item.name}</h4>
+                <p class="text-gray-600 mt-2">${item.price}</p>
+                <button class="w-full mt-4 border border-blue-600 text-blue-600 py-2 rounded-lg hover:bg-blue-50 transition-colors">
+                    View Details
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Initialize the app
+renderItems();
