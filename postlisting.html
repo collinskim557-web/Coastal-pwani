@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Post Listing - Pwani</title>
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+.fade-in{animation:fadeIn .6s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.bg-card{background: linear-gradient(to bottom right, #e0f2fe, #fef9c3); border-radius: 1rem; padding: 1rem; margin-bottom:1rem;}
+.amenity-badge{display:inline-block; background:#bfdbfe; color:#1e3a8a; padding:2px 6px; border-radius:6px; margin:2px; font-size:0.75rem;}
+.card-preview{background-size: cover; background-position: center; border-radius:1rem; min-height:200px; position:relative; overflow:hidden;}
+.card-overlay{position:absolute; inset:0; background: linear-gradient(to top, rgba(0,0,0,0.6), rgba(0,0,0,0.2)); padding:1rem; color:white; display:flex; flex-direction:column; justify-content:flex-end;}
+.location-badge{display:flex; align-items:center; gap:0.25rem; font-size:0.75rem; background: rgba(0,0,0,0.6); padding:0.25rem 0.5rem; border-radius:0.5rem; margin-top:0.5rem;}
+.location-badge img{width:16px;}
+</style>
+
+</head>
+
+<body class="bg-gradient-to-br from-blue-50 to-white text-gray-900">
+
+<!-- AUTH SYSTEM -->
+
+<script>
+// USERS DATABASE (local)
+let users = JSON.parse(localStorage.getItem('pwani_users')) || [];
+let currentUser = JSON.parse(localStorage.getItem('pwani_current_user'));
+
+// SIGNUP / LOGIN
+function auth(){
+  if(currentUser) return;
+
+  const action = prompt("Type: login or signup");
+
+  if(action === "signup"){
+    const name = prompt("Enter name");
+    const phone = prompt("Enter phone (+254...)");
+    const password = prompt("Create password");
+
+    const user = {name, phone, password};
+    users.push(user);
+    localStorage.setItem('pwani_users', JSON.stringify(users));
+    localStorage.setItem('pwani_current_user', JSON.stringify(user));
+    currentUser = user;
+
+  } else {
+    const phone = prompt("Phone:");
+    const password = prompt("Password:");
+
+    const user = users.find(u => u.phone === phone && u.password === password);
+
+    if(user){
+      localStorage.setItem('pwani_current_user', JSON.stringify(user));
+      currentUser = user;
+    } else {
+      alert("User not found");
+      location.reload();
+    }
+  }
+}
+
+auth();
+</script>
+
+<!-- HEADER -->
+
+<header class="bg-white/80 backdrop-blur shadow sticky top-0 z-50">
+  <div class="max-w-7xl mx-auto flex justify-between items-center p-4">
+    <h1 class="text-2xl font-bold text-blue-700">Pwani</h1>
+
+```
+<nav class="flex gap-4 text-sm items-center">
+  <a href="index.html">Home</a>
+  <a href="post-listing.html" class="font-semibold text-blue-600">Post Listing</a>
+  <span id="userDisplay"></span>
+  <button onclick="logout()" class="text-red-500">Logout</button>
+</nav>
+```
+
+  </div>
+</header>
+
+<section class="max-w-3xl mx-auto p-6 fade-in">
+  <h2 class="text-3xl font-bold mb-2">Post a Listing</h2>
+  <p class="text-gray-600 mb-6">Reach thousands of travelers on Kenya's coast</p>
+
+  <!-- TYPE -->
+
+  <div class="bg-card">
+    <h3 class="font-semibold mb-2">What are you listing?</h3>
+    <div class="flex gap-6">
+      <label><input type="radio" name="type" value="stay"> Stay</label>
+      <label><input type="radio" name="type" value="car"> Car</label>
+    </div>
+  </div>
+
+  <!-- BASIC -->
+
+  <div class="bg-card">
+    <input id="title" placeholder="Listing Title" class="w-full p-3 border rounded mb-3">
+    <textarea id="desc" placeholder="Description" class="w-full p-3 border rounded mb-3"></textarea>
+
+```
+<select id="location" class="w-full p-3 border rounded mb-3">
+  <option>Select Location</option>
+  <option>Mombasa</option>
+  <option>Nyali</option>
+  <option>Bamburi</option>
+  <option>Mtwapa</option>
+  <option>Diani</option>
+  <option>Watamu</option>
+  <option>Malindi</option>
+  <option>Kilifi</option>
+  <option>Lamu</option>
+  <option>Msambweni</option>
+  <option>Vipingo</option>
+  <option>Tiwi</option>
+  <option>Voi</option>
+</select>
+
+<input id="price" placeholder="Price per Day (KES)" class="w-full p-3 border rounded mb-3">
+<input id="image" placeholder="Photo URL" class="w-full p-3 border rounded mb-3">
+```
+
+  </div>
+
+  <!-- DYNAMIC -->
+
+  <div id="dynamicFields"></div>
+
+  <!-- AMENITIES -->
+
+  <div class="bg-card">
+    <div id="amenitiesContainer" class="grid grid-cols-2 gap-2 mb-3"></div>
+    <input id="customAmenity" placeholder="Add custom feature" class="w-full p-3 border rounded">
+  </div>
+
+  <!-- CONTACT AUTO FILLED -->
+
+  <div class="bg-card">
+    <input id="name" class="w-full p-3 border rounded mb-3">
+    <input id="phone" class="w-full p-3 border rounded mb-3">
+  </div>
+
+<button onclick="addListing()" class="w-full bg-blue-600 text-white py-3 rounded-lg">Publish Listing</button>
+
+</section>
+
+<script>
+document.getElementById('userDisplay').innerText = currentUser.name;
+name.value = currentUser.name;
+phone.value = currentUser.phone;
+
+let listings = JSON.parse(localStorage.getItem('pwani_listings')) || [];
+
+const stayAmenities = ["WiFi","Swimming Pool","Air Conditioning","Ocean View","Parking"];
+const carAmenities = ["GPS","AC","Bluetooth","Sunroof"];
+
+function renderAmenities(type){
+  const container = document.getElementById('amenitiesContainer');
+  container.innerHTML = '';
+  const list = type === 'stay' ? stayAmenities : carAmenities;
+  list.forEach(a=>{
+    container.innerHTML += `<label><input type="checkbox" class="amenity" value="${a}"> ${a}</label>`;
+  });
+}
+
+function renderDynamicFields(type){
+  const container = document.getElementById('dynamicFields');
+
+  if(type === 'stay'){
+    container.innerHTML = `
+      <div class="bg-card">
+        <input id="guests" placeholder="Max Guests" class="w-full p-3 border rounded mb-3">
+        <input id="bedrooms" placeholder="Bedrooms" class="w-full p-3 border rounded">
+      </div>`;
+  } else {
+    container.innerHTML = `
+      <div class="bg-card">
+        <input id="carType" placeholder="Car Type" class="w-full p-3 border rounded mb-3">
+        <input id="seats" placeholder="Seats" class="w-full p-3 border rounded">
+      </div>`;
+  }
+}
+
+document.querySelectorAll('input[name="type"]').forEach(r=>{
+  r.addEventListener('change', e=>{
+    renderAmenities(e.target.value);
+    renderDynamicFields(e.target.value);
+  });
+});
+
+function addListing(){
+  const type = document.querySelector('input[name="type"]:checked')?.value;
+  if(!type){alert('Select listing type'); return;}
+
+  const amenities = [];
+  document.querySelectorAll('.amenity:checked').forEach(a=>amenities.push(a.value));
+  if(customAmenity.value) amenities.push(customAmenity.value);
+
+  const listing = {
+    type,
+    title:title.value,
+    desc:desc.value,
+    location:location.value,
+    price:price.value,
+    image:image.value,
+    guests:document.getElementById('guests')?.value || '',
+    bedrooms:document.getElementById('bedrooms')?.value || '',
+    carType:document.getElementById('carType')?.value || '',
+    seats:document.getElementById('seats')?.value || '',
+    amenities,
+    name:name.value,
+    phone:phone.value,
+    owner: currentUser.phone // 🔐 OWNER LINK
+  };
+
+  listings.push(listing);
+  localStorage.setItem('pwani_listings', JSON.stringify(listings));
+
+  alert('Listing Published 🚀');
+  window.location.href = 'index.html';
+}
+
+function logout(){
+  localStorage.removeItem('pwani_current_user');
+  location.reload();
+}
+</script>
+
+</body>
+</html>
